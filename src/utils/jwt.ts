@@ -5,17 +5,23 @@ export type JwtPayload = {
   email: string
 }
 
-export const signJwt = (payload: JwtPayload, expiresIn?: string) => {
+export const signJwt = (payload: JwtPayload, expiresIn?: SignOptions['expiresIn']) => {
   const secret = process.env.JWT_SECRET
+
   if (!secret) {
     throw new Error('JWT_SECRET não configurado')
   }
 
-  const options: SignOptions = expiresIn
-    ? {
-        expiresIn: expiresIn as NonNullable<SignOptions['expiresIn']>,
-      }
-    : {}
+  const options: SignOptions | undefined = expiresIn
+    ? { expiresIn }
+    : undefined
 
-  return jwt.sign(payload, secret as Secret, options)
+  return options
+    ? jwt.sign(payload, secret, options)
+    : jwt.sign(payload, secret)
+}
+
+export const verifyJwt = (token: string) => {
+  const secret: Secret = process.env.JWT_SECRET as unknown as Secret
+  return jwt.verify(token,secret) as JwtPayload
 }
